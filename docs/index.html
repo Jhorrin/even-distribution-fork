@@ -1,0 +1,742 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="description" content="How Drag and Dump work in Even Distribution Fork for Factorio 2.1.">
+<title>Even Distribution Fork — Factorio-style guide</title>
+<link rel="icon" href="mod-thumbnail.png">
+<style>
+@font-face {
+  font-family: 'Barlow';
+  font-style: normal;
+  font-weight: 400;
+  font-display: swap;
+  src: url(assets/barlow-400.woff2) format('woff2');
+  unicode-range: U+0000-00FF, U+0131, U+0152-0153, U+02BB-02BC, U+02C6, U+02DA, U+02DC, U+0304, U+0308, U+0329, U+2000-206F, U+20AC, U+2122, U+2191, U+2193, U+2212, U+2215, U+FEFF, U+FFFD;
+}
+@font-face {
+  font-family: 'Barlow';
+  font-style: normal;
+  font-weight: 600;
+  font-display: swap;
+  src: url(assets/barlow-600.woff2) format('woff2');
+  unicode-range: U+0000-00FF, U+0131, U+0152-0153, U+02BB-02BC, U+02C6, U+02DA, U+02DC, U+0304, U+0308, U+0329, U+2000-206F, U+20AC, U+2122, U+2191, U+2193, U+2212, U+2215, U+FEFF, U+FFFD;
+}
+@font-face {
+  font-family: 'Barlow';
+  font-style: normal;
+  font-weight: 700;
+  font-display: swap;
+  src: url(assets/barlow-700.woff2) format('woff2');
+  unicode-range: U+0000-00FF, U+0131, U+0152-0153, U+02BB-02BC, U+02C6, U+02DA, U+02DC, U+0304, U+0308, U+0329, U+2000-206F, U+20AC, U+2122, U+2191, U+2193, U+2212, U+2215, U+FEFF, U+FFFD;
+}
+@font-face {
+  font-family: 'Barlow';
+  font-style: normal;
+  font-weight: 800;
+  font-display: swap;
+  src: url(assets/barlow-800.woff2) format('woff2');
+  unicode-range: U+0000-00FF, U+0131, U+0152-0153, U+02BB-02BC, U+02C6, U+02DA, U+02DC, U+0304, U+0308, U+0329, U+2000-206F, U+20AC, U+2122, U+2191, U+2193, U+2212, U+2215, U+FEFF, U+FFFD;
+}
+@font-face {
+  font-family: 'Barlow Condensed';
+  font-style: normal;
+  font-weight: 800;
+  font-display: swap;
+  src: url(assets/barlow-condensed-800.woff2) format('woff2');
+  unicode-range: U+0000-00FF, U+0131, U+0152-0153, U+02BB-02BC, U+02C6, U+02DA, U+02DC, U+0304, U+0308, U+0329, U+2000-206F, U+20AC, U+2122, U+2191, U+2193, U+2212, U+2215, U+FEFF, U+FFFD;
+}
+:root {
+  color-scheme: dark;
+  --ground: #1c1c1c;
+  --panel: #2e2e2e;
+  --plate: #383838;
+  --well: #202020;
+  --line: #4c4c4c;
+  --edge: #141414;
+  --text: #f2ece2;
+  --muted: #d0cbc2;
+  --orange: #ffaf50;
+  --green: #88b650;
+  --frame: inset 0 1px #575757, inset 0 -2px #222, 0 2px 0 #0e0e0e;
+  --slot: inset 1px 1px 0 #1b1b1b, inset -1px -1px 0 #656565;
+  font: 16px/1.55 "Barlow", "Segoe UI", system-ui, sans-serif;
+  background: var(--ground);
+  color: var(--text);
+}
+*, *::before, *::after { box-sizing: border-box; }
+body { margin: 0; }
+h1, h2, h3, h4, h5, p, figure, dl, dd { margin: 0; }
+h1, h2, h3, h4, h5 { line-height: 1.16; }
+p + p { margin-top: .65em; }
+img { max-inline-size: 100%; }
+a { color: #ffc27d; text-underline-offset: .19em; }
+a:hover { color: #ffe0b3; }
+:is(a, button, summary):focus-visible { outline: 2px solid #ffca86; outline-offset: 3px; }
+button { font: inherit; }
+.wrap { width: min(1140px, calc(100% - 64px)); margin-inline: auto; }
+.skip { position: fixed; z-index: 10; inset: 8px auto auto 8px; transform: translateY(-160%); background: var(--well); padding: .5em 1em; }
+.skip:focus { transform: none; }
+
+.hero {
+  padding-block: clamp(44px, 6vw, 88px);
+  border-bottom: 4px solid #0e0e0e;
+  box-shadow: inset 0 -2px #a76b2e;
+  background:
+    linear-gradient(90deg, #121212f0 0%, #181715b5 39%, #1a191555 72%, #1717177d 100%),
+    linear-gradient(0deg, #171717ed, transparent 40%),
+    #282520 url("factory-background.webp") center 38% / cover;
+}
+.hero .wrap { display: grid; grid-template-columns: 1.05fr 1fr; align-items: center; gap: clamp(30px, 5vw, 76px); }
+.version { color: #ffca8c; font-size: .82rem; font-weight: 700; margin-bottom: 10px; }
+h1 { font: 800 clamp(3.2rem, 5.5vw, 5.25rem)/.96 "Barlow Condensed", "Arial Narrow", "Barlow", sans-serif; text-shadow: 0 3px 0 #161616; }
+h1 span { color: var(--orange); }
+.hero-intro { display: flex; align-items: center; gap: 15px; margin-top: 22px; }
+.hero-art { position: relative; flex: 0 0 80px; aspect-ratio: 1; overflow: hidden; border: 2px solid var(--edge); box-shadow: 0 0 0 1px #616161; }
+.hero-art img { position: absolute; width: 512%; height: auto; max-inline-size: none; inset: -90% auto auto -206%; }
+.hero-desc { min-width: 0; color: var(--muted); font-size: 1.02rem; }
+.hero-desc strong { display: block; color: var(--text); }
+.hero-credit { display: inline-block; white-space: nowrap; }
+.actions, .feedback-links { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 21px; }
+
+.action, .segment button, .module-options span {
+  color: var(--text);
+  background: linear-gradient(#555, #454545);
+  border: 1px solid #181818;
+  border-radius: 2px;
+  box-shadow: inset 0 1px #777, inset 0 -2px #303030, 0 1px #141414;
+  font-weight: 700;
+}
+.action { display: inline-flex; align-items: center; justify-content: center; gap: 8px; min-height: 40px; padding: 5px 15px; font-size: .93rem; text-decoration: none; }
+.action.primary, .segment button[aria-pressed="true"] {
+  color: #20170e;
+  background: linear-gradient(#ffc077, #e4943d);
+  border-color: #201911;
+  box-shadow: inset 0 1px #ffdbab, inset 0 -2px #a55d23, 0 1px #101010;
+}
+.action.primary:hover, .segment button[aria-pressed="true"]:hover { background: #ffc682; color: #20170e; }
+.action.secondary:hover, .segment button:hover { background: #646464; color: #fff1da; }
+
+.calculator, .contents, .article > section, footer .wrap {
+  border: 2px solid var(--edge);
+  border-radius: 3px;
+  background: var(--panel);
+  box-shadow: var(--frame);
+}
+.calculator { overflow: hidden; }
+.hero .calculator { box-shadow: var(--frame), 0 10px 26px #0b0b0bb0; }
+.calc-top, .section-heading, .module-popup figcaption {
+  background: linear-gradient(#464646, #343434);
+  border-bottom: 2px solid #191919;
+  box-shadow: inset 0 1px #5d5d5d, inset 0 -1px #4c4c4c;
+  color: #ffe6c6;
+}
+.calc-top { display: flex; justify-content: space-between; gap: 12px; align-items: center; padding: 11px 14px; }
+.calc-top :is(h2, h4) { font-size: 1rem; font-weight: 750; }
+.calc-top span, .group-total { font: 650 .76rem/1.4 ui-monospace, monospace; color: #ffc27d; }
+.calc-body { padding: 14px; }
+.segment { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 4px; }
+.segment button { cursor: pointer; min-height: 40px; padding: 5px; font-size: .87rem; }
+.machines { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 5px; margin: 12px 0; }
+.machine, .slot, .freshness li {
+  background: linear-gradient(#3e3e3e, #353535);
+  border: 1px solid #222;
+  border-radius: 1px;
+  box-shadow: var(--slot);
+}
+.machine { min-width: 0; text-align: center; padding: 8px 4px; }
+.machine img { display: block; width: 48px; height: 48px; margin: 0 auto 4px; }
+.machine .count { display: block; font: 700 1.3rem/1.25 ui-monospace, monospace; }
+.machine .count small { margin-right: 4px; color: var(--muted); font-size: .62em; }
+.machine .track { display: block; height: 5px; background: #1e1e1e; margin: 7px 4px 0; box-shadow: inset 0 1px #121212; }
+.track span { display: block; height: 100%; background: var(--green); transition: width .2s ease; }
+.calc-note { color: var(--muted); font-size: .88rem; line-height: 1.35; min-height: 2.4em; }
+
+.content { padding-block: 24px 42px; }
+.contents { display: flex; flex-wrap: wrap; align-items: center; gap: 2px; margin-bottom: 14px; padding: 4px; }
+.contents a { padding: 7px 10px; color: var(--muted); text-decoration: none; font-size: .89rem; line-height: 1.4; }
+.contents a:hover { color: #1e1710; background: var(--orange); }
+.article { min-width: 0; }
+.article > section { padding: 0 20px 18px; }
+.article > section + section { margin-top: 14px; }
+.section-heading { margin: 0 -20px 16px; padding: 10px 20px; font-size: 1.36rem; font-weight: 750; }
+.two-col, .settings { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 10px; }
+.card, .feedback, details, .scene-group, .callout {
+  background: var(--well);
+  border: 1px solid var(--edge);
+  border-radius: 2px;
+  box-shadow: inset 0 1px #363636, 0 1px #494949;
+}
+.card, .feedback { padding: 13px; }
+.card h3, .feedback h3 { font-size: 1.08rem; margin-bottom: 6px; color: #ffe1bb; }
+.card p, .intro, .muted, .feature p, details p, .feedback p { color: var(--muted); }
+:is(.card, .feature, .intro, .muted, details, .callout) strong { color: var(--text); }
+.control .keyline { margin-top: 9px; }
+kbd { display: inline-block; padding: 1px 6px; border: 1px solid #5b5b5b; border-bottom: 2px solid #111; background: #3e3e3e; color: #ffdeb5; font: 650 .8rem/1.4 ui-monospace, monospace; white-space: nowrap; }
+.action-copy, .callout, .demo, .settings { margin-top: 11px; }
+.callout { padding: 9px 11px; border-left: 3px solid #d5944f; color: var(--muted); font-size: .94rem; }
+.settings dl { display: grid; gap: 7px; }
+.settings dt { font-weight: 700; }
+.settings dd { color: var(--muted); }
+.settings .example { display: block; margin-block: 9px; color: #c3e595; font-weight: 650; }
+
+.feature { display: grid; grid-template-columns: 40px minmax(0, 1fr); column-gap: 12px; padding: 14px 0; border-bottom: 1px solid var(--line); }
+.feature:first-of-type { padding-top: 1px; }
+.feature h3, .notes h3 { margin-bottom: 6px; font-size: 1.21rem; color: #ffe1bb; }
+.feature .icon { width: 40px; height: 40px; padding: 4px; border: 1px solid var(--edge); box-shadow: var(--slot); background: #414141; }
+.inline-item { width: 25px; height: 25px; vertical-align: middle; margin-right: 4px; }
+.freshness { list-style: none; padding: 0; margin: 10px 0; display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 4px; max-width: 465px; }
+.freshness li { display: flex; align-items: center; gap: 7px; padding: 5px 7px; font-size: .81rem; line-height: 1.25; }
+.fresh-item { position: relative; display: block; flex: 0 0 28px; height: 32px; }
+.fresh-item img { width: 26px; height: 26px; }
+.fresh-item::after { content: ""; position: absolute; inset: auto 1px 1px; height: 3px; background: linear-gradient(to right, var(--green) var(--fresh), #212121 var(--fresh)); }
+.module-popup { width: fit-content; max-width: 100%; border: 1px solid var(--edge); background: #303030; box-shadow: var(--frame); margin-top: 10px; }
+.module-popup figcaption { padding: 7px 10px; font-size: .9rem; font-weight: 700; }
+.module-options { display: flex; flex-wrap: wrap; gap: 4px; padding: 7px; }
+.module-options span { padding: 2px 7px; font-size: .8rem; }
+.module-options .cancel { color: #ffd3c4; background: #64332c; box-shadow: inset 0 1px #89544c, inset 0 -2px #49221c; }
+.rules { display: grid; gap: 8px; }
+.rule { display: flex; align-items: flex-start; gap: 10px; color: var(--muted); }
+.rule .icons { display: flex; flex: 0 0 auto; gap: 5px; }
+.rule .icons img { width: 25px; height: 25px; }
+
+.scene { margin-top: 12px; max-width: 760px; }
+.scene .segment { margin-top: 9px; }
+[data-scene="ammo"] .segment { grid-template-columns: repeat(4, minmax(0, 1fr)); }
+.scene-state { margin-top: 10px; display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 1.4fr); gap: 8px; }
+.ammo-side { display: grid; align-content: start; gap: 7px; min-width: 0; }
+.ammo-side h4 { color: var(--muted); font-size: .85rem; }
+.scene-group { min-width: 0; padding: 7px; }
+.scene-group h5 { display: flex; align-items: center; flex-wrap: wrap; gap: 4px; margin-bottom: 5px; font-size: .85rem; }
+.scene-group h5 img { width: 22px; height: 22px; }
+.group-total { margin-left: auto; }
+.scene-grid { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 3px; }
+.scene-grid.single { grid-template-columns: minmax(0, 1fr); }
+.turret-row { grid-template-columns: repeat(4, minmax(0, 1fr)); }
+.turret-row + .turret-row { margin-top: 3px; }
+.slot { position: relative; min-width: 0; display: grid; justify-items: center; padding: 4px 1px; gap: 1px; }
+.slot.is-empty { background: #303030; }
+.slot.is-empty .slot-icon { visibility: hidden; }
+.slot.is-moved { border-color: #bd813f; }
+.slot.is-equipped { border-color: #756140; }
+.slot-icon { display: block; width: 28px; height: 28px; }
+.slot-icon .item { width: 27px; height: 27px; object-fit: contain; }
+.slot-count { font: 700 .84rem/1.3 ui-monospace, monospace; }
+.slot-label { color: var(--muted); font-size: .75rem; line-height: 1.25; text-align: center; }
+.slot-delta { position: absolute; top: 2px; right: 2px; background: #282017; color: #ffcb8e; padding: 0 2px; font: 700 .65rem ui-monospace, monospace; }
+.reserve-total { display: flex; justify-content: space-between; flex-wrap: wrap; gap: 3px 6px; border-top: 1px solid var(--line); margin-top: 6px; padding-top: 4px; font-size: .78rem; }
+.reserve-total strong { color: #ffc27d; font-family: ui-monospace, monospace; }
+.scene .calc-note { margin-top: 10px; }
+
+.notes { padding-top: 16px; }
+details + details { margin-top: 6px; }
+summary { cursor: pointer; padding: 8px 10px; color: #ffe0b8; font-weight: 650; }
+summary:hover { background: #333; }
+details[open] summary { border-bottom: 1px solid var(--line); }
+.detail-body { padding: 10px 12px; }
+details ul { margin: 0; padding-inline-start: 1.2em; color: var(--muted); }
+details li + li { margin-top: 4px; }
+.demo figure video { display: block; max-height: 410px; width: auto; height: auto; }
+figcaption { margin-top: 6px; color: var(--muted); font-size: .84rem; }
+.overhaul-list { margin-block: 7px; display: flex; flex-wrap: wrap; gap: 5px 16px; list-style: none; padding: 0; }
+.overhaul-list li + li { margin-top: 0; }
+.feedback .two-col { gap: 14px; }
+.feedback-links { margin-top: 10px; }
+footer { padding-bottom: 34px; color: var(--muted); font-size: .9rem; }
+footer .wrap { padding: 15px 20px; }
+footer h2 { color: #ffe1bb; font-size: 1.15rem; margin-bottom: 7px; }
+.credits-list { display: grid; gap: 3px; margin: 0 0 10px; list-style: none; padding: 0; }
+
+@media (max-width: 860px) {
+  .wrap { width: calc(100% - 32px); }
+}
+@media (max-width: 640px) {
+  .hero { padding-block: 30px 23px; background-position: center, center, 58% 20%; }
+  .hero .wrap { grid-template-columns: minmax(0, 1fr); gap: 18px; }
+  h1 { font-size: clamp(2.8rem, 11vw, 4rem); }
+  .hero-intro { gap: 10px; margin-top: 13px; }
+  .hero-art { flex-basis: 57px; }
+  .hero-desc { font-size: .96rem; }
+  .actions { margin-top: 13px; }
+  .article > section { padding-inline: 12px; }
+  .section-heading { margin-inline: -12px; padding-inline: 12px; }
+  .feature { grid-template-columns: 30px minmax(0, 1fr); gap: 7px; }
+  .feature .icon { width: 30px; height: 30px; padding: 2px; }
+  .two-col, .settings, .scene-state { grid-template-columns: minmax(0, 1fr); }
+  [data-scene="ammo"] .segment { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+  .freshness li { flex-direction: column; align-items: flex-start; }
+  .fresh-item { flex-basis: auto; }
+}
+@media (prefers-reduced-motion: reduce) { .track span { transition: none; } }
+</style>
+</head>
+<body>
+<a class="skip" href="#main">Skip to content</a>
+<main id="main">
+  <section class="hero" id="top" aria-labelledby="hero-title">
+    <div class="wrap">
+      <div>
+        <p class="version">Factorio 2.1 · Public stable release</p>
+        <h1 id="hero-title">Even Distribution <span>Fork</span></h1>
+        <div class="hero-intro">
+          <div class="hero-art"><img src="mod-thumbnail-original.png" alt="Even Distribution mod artwork" width="1280" height="720"></div>
+          <p class="hero-desc"><strong>Fill several buildings without opening every inventory.</strong> A maintained fork of <span class="hero-credit"><a href="https://mods.factorio.com/mod/even-distribution">Even Distribution</a> by <a href="https://mods.factorio.com/user/321freddy">321freddy</a>.</span></p>
+        </div>
+        <div class="actions">
+          <a class="action primary" href="https://mods.factorio.com/mod/even-distribution-fork">Mod Portal</a>
+          <a class="action secondary" href="#how">How it works <span aria-hidden="true">↓</span></a>
+        </div>
+      </div>
+      <section class="calculator" data-example="distribution" aria-labelledby="example-title">
+        <div class="calc-top"><h2 id="example-title">Distribution example</h2><span>60 items offered</span></div>
+        <div class="calc-body">
+          <div class="segment" role="group" aria-label="Distribution mode">
+            <button type="button" data-step="even" aria-pressed="true">Even Distribute</button>
+            <button type="button" data-step="balance" aria-pressed="false">Balance Inventory</button>
+          </div>
+          <div class="machines" role="group" aria-label="Three buildings, each showing stock before and after">
+            <div class="machine"><img src="assets/48px-Assembling_machine_3.png" width="48" height="48" alt=""><span class="count"><small data-before>30 →</small><span data-amount>50</span></span><span class="track" aria-hidden="true"><span style="width:100%"></span></span></div>
+            <div class="machine"><img src="assets/48px-Assembling_machine_3.png" width="48" height="48" alt=""><span class="count"><small data-before>0 →</small><span data-amount>20</span></span><span class="track" aria-hidden="true"><span style="width:40%"></span></span></div>
+            <div class="machine"><img src="assets/48px-Assembling_machine_3.png" width="48" height="48" alt=""><span class="count"><small data-before>0 →</small><span data-amount>20</span></span><span class="track" aria-hidden="true"><span style="width:40%"></span></span></div>
+          </div>
+          <p class="calc-note" role="status" data-note>Add 20 to each building. Final stock: 50, 20 and 20.</p>
+        </div>
+      </section>
+    </div>
+  </section>
+
+  <div class="wrap content">
+    <nav class="contents" aria-label="On this page">
+      <a href="#how">How it works</a>
+      <a href="#settings">Settings</a>
+      <a href="#changes">Changes since original</a>
+      <a href="#community-fixes">Community fixes</a>
+      <a href="#notes">Compatibility and fixes</a>
+      <a href="#feedback">Feedback</a>
+      <a href="#credits">Credits</a>
+    </nav>
+    <div class="article">
+      <section id="how" aria-labelledby="how-title">
+        <h2 class="section-heading" id="how-title">How it works</h2>
+        <div class="two-col">
+          <div class="card control">
+            <h3>Drag</h3>
+            <p>Hold an item and drag across buildings, starting over empty ground. Right mouse offers half instead.</p>
+            <p class="keyline"><kbd>Ctrl</kbd> + <kbd>Left mouse</kbd></p>
+          </div>
+          <div class="card control">
+            <h3>Dump</h3>
+            <p>Send excess ores, intermediates, science packs and trash-slot items to nearby compatible buildings.</p>
+            <p class="keyline"><kbd>Shift</kbd> + <kbd>C</kbd></p>
+          </div>
+        </div>
+        <p class="action-copy muted">Both actions use your selected distribution mode. Items that cannot be placed stay at their source.</p>
+        <div class="callout">In <strong>Even Distribute</strong>, Drag leaves a full building’s rejected share with you. Dump can redistribute rejected shares among eligible destinations. Drag can do the same when distributing spoilable items.</div>
+        <div class="callout"><strong>Balance Inventory</strong> can move matching items between buildings to even out their stock. When turrets or vehicles are destinations, their existing stock counts toward the balance and stays in place. Drag can swap loaded ammo for stronger ammo when upgrades are enabled.</div>
+        <details class="demo" id="demo">
+          <summary>Watch the original Drag demonstration</summary>
+          <div class="detail-body">
+            <figure>
+              <video id="demo-video" aria-label="Items being spread across multiple buildings using Drag in Factorio" data-src="assets/drag-demo.webm" muted autoplay loop playsinline controls></video>
+              <figcaption>Original demonstration by <a href="https://mods.factorio.com/user/321freddy">321freddy</a>.</figcaption>
+            </figure>
+          </div>
+        </details>
+      </section>
+
+      <section id="settings" aria-labelledby="settings-title">
+        <h2 class="section-heading" id="settings-title">Settings</h2>
+        <p class="intro">Open the <strong>blue button beside your inventory</strong>, or use the shared mod button bar with <a href="https://mods.factorio.com/mod/GUI_Unifyer">GUI Unifyer</a>.</p>
+        <div class="settings">
+          <div class="card">
+            <h3>Distribution options</h3>
+            <dl>
+              <div><dt>Sources</dt><dd>Cursor, inventory and vehicle cargo.</dd></div>
+              <div><dt>Fuel and ammo</dt><dd>Set per-building limits for Drag and Dump. Drag can upgrade ammo and swap wood for coal. In <strong>Advanced</strong>, choose which ammo tier and fuel value Dump offers first.</dd></div>
+              <div><dt>Destinations</dt><dd>Optional chest filling and machine output slots. Ordinary chests need the item already inside. Requester chests follow their requests.</dd></div>
+              <div><dt>Other controls</dt><dd>Range, delay and ignored buildings.</dd></div>
+            </dl>
+          </div>
+          <div class="card">
+            <h3>Personal logistic requests</h3>
+            <p>Your requests tell Dump how many items to keep. It keeps the requested maximum by default. You can switch to the minimum.</p>
+            <span class="example">Keep 100 → Dump everything above 100</span>
+            <p><strong>Minimum 0 + maximum ∞</strong> excludes the item from regular Dump. Compatible ammo and fuel slots can still be topped up.</p>
+          </div>
+        </div>
+      </section>
+
+      <section id="changes" aria-labelledby="changes-title">
+        <h2 class="section-heading" id="changes-title">Changes since original</h2>
+        <article class="feature">
+          <img class="icon" src="assets/32px-Bioflux.png" alt="">
+          <div>
+            <h3>Bio items</h3>
+            <p>In <strong>Advanced</strong>, choose <strong>Spoiled first</strong> (default) or <strong>Fresh first</strong>. One Drag can work through up to three freshness groups. Dump offers one group per item, starting at the selected end.</p>
+            <ol class="freshness" aria-label="Freshness groups, oldest first">
+              <li><span class="fresh-item" style="--fresh:22%"><img src="assets/32px-Bioflux.png" alt=""></span>Mostly spoiled</li>
+              <li><span class="fresh-item" style="--fresh:52%"><img src="assets/32px-Bioflux.png" alt=""></span>Medium freshness</li>
+              <li><span class="fresh-item" style="--fresh:91%"><img src="assets/32px-Bioflux.png" alt=""></span>Fresh</li>
+            </ol>
+            <p>Freshness is averaged by item count within the active group. Each group is averaged separately when it is distributed.</p>
+            <p><img class="inline-item" src="assets/32px-Nutrients.png" alt=""> <strong>Nutrients</strong> can fill a Biochamber’s fuel and recipe input. If a Biochamber in your Drag can use both, choose where to send them. Dump can put Bioflux in matching recipe inputs and Nutrients in the fuel slot in the same action. Fuel limits apply.</p>
+            <figure class="module-popup">
+              <figcaption>Where do you want the nutrients?</figcaption>
+              <div class="module-options"><span>Input slot</span><span>Fuel slot</span><span>Both</span><span class="cancel">Cancel</span></div>
+            </figure>
+            <p><small>Initial spoilage preservation contributed by <a href="https://mods.factorio.com/user/FallenPaladin">FallenPaladin</a>.</small></p>
+          </div>
+        </article>
+
+        <article class="feature">
+          <img class="icon" src="assets/32px-Firearm_magazine.png" alt="">
+          <div>
+            <h3>Ammo</h3>
+            <p><strong>Dump ammo</strong> is enabled by default. In <strong>Advanced</strong>, choose <strong>Low tier ammo first</strong> (default) or <strong>High tier ammo first</strong>. This sets the Dump order within each ammo family, including magazines, cannon shells, and rockets. Within a magazine type, Dump uses partly spent magazines first.</p>
+            <p><strong>Keep at least 100 of your equipped ammo</strong> across your weapon slots, inventory and cursor. Drag and Dump can each move up to 100 matching magazines from your carried stock into compatible ammo slots, regardless of your personal requests.</p>
+            <p><img class="inline-item" src="assets/32px-Atomic_bomb.png" alt=""> <strong>Atomic bombs</strong> can go to compatible turrets through Drag. Dump can send them to chests.</p>
+            <section class="calculator scene" data-scene="ammo" aria-labelledby="ammo-example-title">
+              <div class="calc-top"><h4 id="ammo-example-title">Magazine progression</h4></div>
+              <div class="calc-body">
+                <p class="scene-setup">Eight empty gun turrets with <strong>Low tier ammo first</strong> selected. The ammo limit is <strong>0.1 stacks</strong> (10 magazines per turret).</p>
+                <div class="segment" role="group" aria-label="Ammo example steps">
+                  <button type="button" data-scene-step="0" aria-pressed="true">Start</button>
+                  <button type="button" data-scene-step="1" aria-pressed="false">First Dump</button>
+                  <button type="button" data-scene-step="2" aria-pressed="false">After firing</button>
+                  <button type="button" data-scene-step="3" aria-pressed="false">Second Dump</button>
+                </div>
+                <div class="scene-state" data-scene-state></div>
+                <p class="calc-note" role="status" data-scene-note></p>
+              </div>
+            </section>
+          </div>
+        </article>
+
+        <article class="feature">
+          <img class="icon" src="assets/32px-Rocket_fuel.png" alt="">
+          <div>
+            <h3>Fuel</h3>
+            <p>Dump refills boilers and other compatible burners up to the configured fuel limit. In <strong>Advanced</strong>, choose <strong>Low fuel value first</strong> (default) or <strong>High fuel value first</strong>.</p>
+            <p>Fuel reserved by a personal logistic request can go directly into a compatible fuel slot.</p>
+          </div>
+        </article>
+
+        <article class="feature">
+          <img class="icon" src="assets/32px-Any_quality.png" alt="">
+          <div>
+            <h3>Quality</h3>
+            <p><strong>Drag supports all qualities. Dump handles Normal items by default.</strong> Enable <strong>Dump higher-quality items (Beta)</strong> in the in-game settings to include higher qualities. This can move valuable items from your inventory. Hover over the in-game ⓘ for details.</p>
+          </div>
+        </article>
+
+        <article class="feature">
+          <img class="icon" src="assets/32px-Speed_module_3.png" alt="">
+          <div>
+            <h3>Dragging modules</h3>
+            <p>The module popup appears when any building in the Drag accepts the selected module as both a recipe ingredient and an installed module.</p>
+            <figure class="module-popup">
+              <figcaption>Where do you want the modules?</figcaption>
+              <div class="module-options"><span>Input slot</span><span>Module slot</span><span class="cancel">Cancel</span></div>
+            </figure>
+          </div>
+        </article>
+
+        <article class="feature">
+          <img class="icon" src="assets/32px-Transport_belt.png" alt="">
+          <div>
+            <h3>Dragging placeable items</h3>
+            <p>Drag can distribute placeable items such as transport belts to machines that use them as recipe ingredients.</p>
+          </div>
+        </article>
+
+        <article class="feature">
+          <img class="icon" src="assets/32px-Warning-icon.png" alt="">
+          <div>
+            <h3>Protected destinations</h3>
+            <div class="rules">
+              <div class="rule"><span class="icons"><img src="assets/32px-Recycler.png" alt=""><img src="assets/32px-Heating_tower.png" alt=""></span><div><strong>Recycler and heating tower</strong><br>Drag first. Dump only tops up an input or fuel inventory that already contains items.</div></div>
+              <div class="rule"><span class="icons"><img src="assets/32px-Nuclear_reactor.png" alt=""><img src="assets/32px-Fusion_reactor.png" alt=""></span><div><strong>Nuclear and fusion reactors</strong><br>Drag only, even when already supplied.</div></div>
+            </div>
+          </div>
+        </article>
+
+        <section class="notes" id="community-fixes" aria-labelledby="community-fixes-title">
+          <h3 id="community-fixes-title">Community fixes</h3>
+          <div class="card">
+            <p><strong>Multiplayer Inventory Cleanup</strong></p>
+            <p>When another player joins the same force, Inventory Cleanup reuses the shared default logistic filters. This preserves any edits and avoids the duplicate filter error that could crash the server.</p>
+            <p><small>Fix contributed by <a href="https://mods.factorio.com/user/Deadpoolweid">Deadpoolweid</a> · <a href="https://github.com/Jhorrin/even-distribution-fork/pull/1">Pull request #1</a></small></p>
+          </div>
+        </section>
+
+        <div class="notes" id="notes">
+          <h3>Settings, compatibility and fixes</h3>
+          <details>
+            <summary>Settings tweaks</summary>
+            <div class="detail-body"><ul>
+              <li>Dump above the minimum personal logistic request and <strong>Drop items to machine outputs</strong> are off by default.</li>
+              <li>Added help icons for settings, including <strong>Ignored buildings</strong>.</li>
+            </ul></div>
+          </details>
+          <details>
+            <summary>Compatibility updates</summary>
+            <div class="detail-body"><ul>
+              <li>With <a href="https://mods.factorio.com/mod/GUI_Unifyer">GUI Unifyer</a>, the shared mod button opens the settings window fully expanded.</li>
+              <li><a href="https://factorio.com/space-age">Space Age</a> and <a href="https://mods.factorio.com/mod/GUI_Unifyer">GUI Unifyer</a> are recommended dependencies.</li>
+              <li>Other Even Distribution variants are marked as incompatible.</li>
+              <li>Fixed <a href="https://mods.factorio.com/mod/modlist-ui">Modlist UI</a> requesting outdated thumbnail dimensions.</li>
+            </ul></div>
+          </details>
+          <details>
+            <summary>Inherited overhaul compatibility</summary>
+            <div class="detail-body">
+              <p>Inherited Dump defaults take effect when matching items or groups exist.</p>
+              <ul class="overhaul-list">
+                <li><a href="https://mods.factorio.com/mod/bobplates">Bob’s Mods</a></li>
+                <li><a href="https://mods.factorio.com/mod/angelsrefining">Angel’s Mods</a></li>
+                <li><a href="https://mods.factorio.com/mod/pycoalprocessing">Pyanodons</a></li>
+                <li><a href="https://mods.factorio.com/mod/space-exploration">Space Exploration</a></li>
+                <li><a href="https://forums.factorio.com/viewtopic.php?t=69187">Industrial Revolution</a></li>
+                <li><a href="https://mods.factorio.com/mod/MAIN-DyTech-Dynamics">DyTech</a></li>
+                <li><a href="https://mods.factorio.com/mod/ScienceCostTweakerM">ScienceCostTweaker</a></li>
+              </ul>
+              <p>These defaults have not been retested with current overhaul versions. The original mod already marked DyTech and Pyanodons as untested.</p>
+            </div>
+          </details>
+          <details>
+            <summary>Reliability fixes</summary>
+            <div class="detail-body"><ul>
+              <li>Updated fuel handling for Factorio 2.1, including multiple fuel categories.</li>
+              <li>Restored the original allocation rules for full destinations, existing stock, remainders and rounding.</li>
+              <li>Fixed item loss when a native transfer automatically refills the cursor from the inventory.</li>
+              <li>Preserve quality, remaining shots, durability and health. Spoilable items follow the freshness order selected in Advanced.</li>
+              <li>Handle partial transfers and returns without dropping rejected items on the ground.</li>
+              <li>Safely switch between dragged items and qualities, and restore items after sorting or changes to available inventory space.</li>
+              <li>Improved save/load and update handling. Import saved preferences and ignored buildings when replacing the <a href="https://mods.factorio.com/mod/even-distribution">original mod</a>. Update defaults while keeping saved preferences.</li>
+              <li>Corrected the position of distribution markers on Spidertrons.</li>
+              <li>Recognize possible recipe outputs even when the minimum yield is zero.</li>
+            </ul></div>
+          </details>
+          <details>
+            <summary>Performance updates</summary>
+            <div class="detail-body"><ul>
+              <li>Reduced repeated inventory scans and temporary-inventory creation during selection changes.</li>
+              <li>More targeted cleanup of temporary transfer backups.</li>
+              <li>Faster target lookups while preserving distribution order.</li>
+            </ul></div>
+          </details>
+        </div>
+      </section>
+
+      <section id="feedback" aria-labelledby="feedback-title">
+        <h2 class="section-heading" id="feedback-title">Feedback</h2>
+        <div class="feedback">
+          <div class="two-col">
+            <section>
+              <h3>Popups and toggles</h3>
+              <p>Do the popups appear when you expect them? How do the freshness, ammo, and fuel toggles feel in play?</p>
+            </section>
+            <section>
+              <h3>Report a bug or share feedback</h3>
+              <p>Reports are welcome on either site. Use GitHub for screenshots or videos. A GitHub account is required to post there.</p>
+              <nav class="feedback-links" aria-label="Feedback channels">
+                <a class="action secondary" href="https://mods.factorio.com/mod/even-distribution-fork/discussion">Mod Portal</a>
+                <a class="action secondary" href="https://github.com/Jhorrin/even-distribution-fork/issues/new">GitHub</a>
+              </nav>
+            </section>
+          </div>
+        </div>
+      </section>
+    </div>
+  </div>
+</main>
+<footer id="credits">
+  <div class="wrap">
+    <h2>Credits</h2>
+    <ul class="credits-list">
+      <li>Original mod · <a href="https://mods.factorio.com/user/321freddy">321freddy</a></li>
+      <li>Fork and maintenance · <a href="https://mods.factorio.com/user/Jhorr">Jhorr</a></li>
+      <li>Initial spoilage preservation · <a href="https://mods.factorio.com/user/FallenPaladin">FallenPaladin</a></li>
+      <li>Quality-loss issue report · <a href="https://mods.factorio.com/user/Sgamez">Sgamez</a></li>
+      <li>Multiplayer Inventory Cleanup crash fix and reports on fuel taking priority over recipe inputs and Ctrl+drag sending modules to machine inputs · <a href="https://mods.factorio.com/user/Deadpoolweid">Deadpoolweid</a></li>
+    </ul>
+    <p>Keeping Even Distribution up to date and fixing issues as they arise until <a href="https://mods.factorio.com/user/321freddy">321freddy</a> returns.</p>
+    <p>Icons and factory artwork from <a href="https://wiki.factorio.com/">Factorio Wiki</a> and <a href="https://www.factorio.com/">Wube Software</a> · <a href="https://github.com/Jhorrin/even-distribution-fork">GitHub source</a></p>
+  </div>
+</footer>
+<script>
+const examples = {
+  distribution: {
+    even: { before: [30, 0, 0], after: [50, 20, 20], bars: [100, 40, 40],
+      note: "Add 20 to each building. Final stock: 50, 20 and 20." },
+    balance: { before: [30, 0, 0], after: [30, 30, 30], bars: [60, 60, 60],
+      note: "Fill the two emptier buildings. Final stock: 30, 30 and 30." }
+  }
+};
+document.querySelectorAll("[data-example]").forEach(panel => {
+  const modes = examples[panel.dataset.example];
+  const buttons = panel.querySelectorAll("[data-step]");
+  const counts = panel.querySelectorAll("[data-amount]");
+  const before = panel.querySelectorAll("[data-before]");
+  const bars = panel.querySelectorAll(".track span");
+  const note = panel.querySelector("[data-note]");
+
+  buttons.forEach(button => button.addEventListener("click", () => {
+    const mode = modes[button.dataset.step];
+    buttons.forEach(option => option.setAttribute("aria-pressed", String(option === button)));
+    counts.forEach((count, index) => {
+      before[index].textContent = mode.before[index] + " →";
+      count.textContent = mode.after[index];
+      bars[index].style.width = mode.bars[index] + "%";
+    });
+    note.textContent = mode.note;
+  }));
+});
+
+const itemImage = name => "assets/32px-" + name + ".png";
+const slot = (item, count, options = {}) => ({ item, count, ...options });
+
+const yellowMagazine = "Firearm_magazine";
+const redMagazine = "Piercing_rounds_magazine";
+const equippedMagazines = 20;
+const perTurretLimit = 10;
+const afterFiring = [0, 4, 0, 6, 5, 0, 8, 0];
+const yellowInventory = afterFiring.length * perTurretLimit;
+const redInventory = 120;
+const ammoNotes = [
+  "You carry both types of magazine. The turrets are empty.",
+  "All 80 yellow magazines move into the turrets. The red magazines stay with you.",
+  "Four turrets run out of ammo. The other four still hold yellow magazines.",
+  "40 red magazines fill the empty turrets. The other four keep firing yellow."
+];
+
+function ammoScene(index) {
+  const yellowMoved = index > 0 ? yellowInventory : 0;
+  const redMoved = index === 3 ? afterFiring.filter(count => count === 0).length * perTurretLimit : 0;
+  const redLeft = redInventory - redMoved;
+  const turretSlots = afterFiring.map(left => {
+    if (index === 0) return slot(yellowMagazine, 0);
+    if (index === 1) return slot(yellowMagazine, perTurretLimit);
+    if (index === 3 && left === 0) return slot(redMagazine, perTurretLimit);
+    return slot(yellowMagazine, left);
+  });
+  const loaded = turretSlots.filter(entry => entry.count).length;
+  return {
+    player: [
+      { name: "Firearm magazines", icon: yellowMagazine, layout: "single",
+        slots: [slot(yellowMagazine, yellowInventory - yellowMoved,
+          { label: "Inventory", delta: index === 1 ? -yellowMoved : 0 })] },
+      { name: "Piercing magazines", icon: redMagazine,
+        reserve: equippedMagazines + " + " + redLeft + " = " + (equippedMagazines + redLeft),
+        slots: [
+          slot(redMagazine, equippedMagazines, { label: "Equipped", equipped: true }),
+          slot(redMagazine, redLeft, { label: "Inventory", delta: -redMoved })
+        ] }
+    ],
+    turrets: [{ name: "Gun turrets", icon: "Gun_turret", total: loaded + " / 8 loaded",
+      rows: [turretSlots.slice(0, 4), turretSlots.slice(4)] }]
+  };
+}
+
+function sceneImage(src, className, alt) {
+  const image = document.createElement("img");
+  image.src = src;
+  image.className = className;
+  image.alt = alt;
+  return image;
+}
+
+function sceneSlot(entry) {
+  const item = document.createElement("div");
+  item.className = "slot" + (entry.count === 0 ? " is-empty" : "");
+  if (entry.delta) item.classList.add("is-moved");
+  if (entry.equipped) item.classList.add("is-equipped");
+  const icon = document.createElement("span");
+  icon.className = "slot-icon";
+  if (entry.count) {
+    icon.append(sceneImage(itemImage(entry.item), "item", entry.item.replaceAll("_", " ")));
+  }
+  item.append(icon);
+  const count = document.createElement("span");
+  count.className = "slot-count";
+  count.textContent = entry.count || "–";
+  if (!entry.count) count.setAttribute("aria-label", "Empty");
+  item.append(count);
+  if (entry.delta) {
+    const delta = document.createElement("span");
+    delta.className = "slot-delta";
+    delta.textContent = entry.delta > 0 ? "+" + entry.delta : "−" + Math.abs(entry.delta);
+    item.append(delta);
+  }
+  if (entry.label) {
+    const label = document.createElement("span");
+    label.className = "slot-label";
+    label.textContent = entry.label;
+    item.append(label);
+  }
+  return item;
+}
+
+function sceneGroup(group) {
+  const section = document.createElement("section");
+  section.className = "scene-group";
+  const heading = document.createElement("h5");
+  if (group.icon) heading.append(sceneImage(itemImage(group.icon), "", ""));
+  heading.append(group.name);
+  if (group.total) {
+    const total = document.createElement("span");
+    total.className = "group-total";
+    total.textContent = group.total;
+    heading.append(total);
+  }
+  section.append(heading);
+  const rows = group.rows || [group.slots];
+  rows.forEach(slots => {
+    const grid = document.createElement("div");
+    grid.className = "scene-grid " + (group.rows ? "turret-row" : (group.layout || ""));
+    grid.append(...slots.map(sceneSlot));
+    section.append(grid);
+  });
+  if (group.reserve) {
+    const total = document.createElement("p");
+    total.className = "reserve-total";
+    const formula = document.createElement("strong");
+    formula.textContent = group.reserve;
+    total.append("Total with you", formula);
+    section.append(total);
+  }
+  return section;
+}
+
+function ammoSide(title, groups) {
+  const side = document.createElement("div");
+  side.className = "ammo-side";
+  const heading = document.createElement("h4");
+  heading.textContent = title;
+  side.append(heading, ...groups.map(sceneGroup));
+  return side;
+}
+
+document.querySelectorAll('[data-scene="ammo"]').forEach(panel => {
+  const buttons = panel.querySelectorAll("[data-scene-step]");
+  const state = panel.querySelector("[data-scene-state]");
+  const note = panel.querySelector("[data-scene-note]");
+  function render(index) {
+    const scene = ammoScene(index);
+    state.replaceChildren(ammoSide("With you", scene.player), ammoSide("Turret ammo slots", scene.turrets));
+    note.textContent = ammoNotes[index];
+    buttons.forEach(button => button.setAttribute("aria-pressed", String(Number(button.dataset.sceneStep) === index)));
+  }
+  buttons.forEach(button => button.addEventListener("click", () => render(Number(button.dataset.sceneStep))));
+  render(0);
+});
+
+const demo = document.querySelector("#demo");
+const demoVideo = document.querySelector("#demo-video");
+demo.addEventListener("toggle", () => {
+  if (demo.open && !demoVideo.hasAttribute("src")) demoVideo.src = demoVideo.dataset.src;
+});
+</script>
+</body>
+</html>
