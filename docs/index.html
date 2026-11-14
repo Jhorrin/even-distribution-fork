@@ -162,6 +162,7 @@ h1 span { color: var(--orange); }
 .article > section + section { margin-top: 14px; }
 .section-heading { margin: 0 -20px 16px; padding: 10px 20px; font-size: 1.36rem; font-weight: 750; }
 .two-col, .settings { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 10px; }
+.settings { grid-template-columns: repeat(3, minmax(0, 1fr)); }
 .card, .feedback, details, .scene-group, .callout {
   background: var(--well);
   border: 1px solid var(--edge);
@@ -179,7 +180,8 @@ kbd { display: inline-block; padding: 1px 6px; border: 1px solid #5b5b5b; border
 .settings dl { display: grid; gap: 7px; }
 .settings dt { font-weight: 700; }
 .settings dd { color: var(--muted); }
-.settings .example { display: block; margin-block: 9px; color: #c3e595; font-weight: 650; }
+.settings .advanced { grid-column: 1 / -1; }
+.settings dd + dd { margin-top: 4px; }
 
 .feature { display: grid; grid-template-columns: 40px minmax(0, 1fr); column-gap: 12px; padding: 14px 0; border-bottom: 1px solid var(--line); }
 .feature:first-of-type { padding-top: 1px; }
@@ -201,9 +203,9 @@ kbd { display: inline-block; padding: 1px 6px; border: 1px solid #5b5b5b; border
 .rule .icons { display: flex; flex: 0 0 auto; gap: 5px; }
 .rule .icons img { width: 25px; height: 25px; }
 
-.scene { margin-top: 12px; max-width: 760px; }
+.scene { margin-top: 12px; }
 .scene .segment { margin-top: 9px; }
-[data-scene="ammo"] .segment { grid-template-columns: repeat(4, minmax(0, 1fr)); }
+[data-scene="ammo"] .segment { grid-template-columns: repeat(3, minmax(0, 1fr)); }
 .scene-state { margin-top: 10px; display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 1.4fr); gap: 8px; }
 .ammo-side { display: grid; align-content: start; gap: 7px; min-width: 0; }
 .ammo-side h4 { color: var(--muted); font-size: .85rem; }
@@ -213,8 +215,7 @@ kbd { display: inline-block; padding: 1px 6px; border: 1px solid #5b5b5b; border
 .group-total { margin-left: auto; }
 .scene-grid { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 3px; }
 .scene-grid.single { grid-template-columns: minmax(0, 1fr); }
-.turret-row { grid-template-columns: repeat(4, minmax(0, 1fr)); }
-.turret-row + .turret-row { margin-top: 3px; }
+.turret-row { grid-template-columns: repeat(8, minmax(0, 1fr)); }
 .slot { position: relative; min-width: 0; display: grid; justify-items: center; padding: 4px 1px; gap: 1px; }
 .slot.is-empty { background: #303030; }
 .slot.is-empty .slot-icon { visibility: hidden; }
@@ -265,6 +266,7 @@ footer h2 { color: #ffe1bb; font-size: 1.15rem; margin-bottom: 7px; }
   .feature .icon { width: 30px; height: 30px; padding: 2px; }
   .two-col, .settings, .scene-state { grid-template-columns: minmax(0, 1fr); }
   [data-scene="ammo"] .segment { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+  .turret-row { grid-template-columns: repeat(4, minmax(0, 1fr)); }
   .freshness li { flex-direction: column; align-items: flex-start; }
   .fresh-item { flex-basis: auto; }
 }
@@ -322,7 +324,7 @@ footer h2 { color: #ffe1bb; font-size: 1.15rem; margin-bottom: 7px; }
         <div class="two-col">
           <div class="card control">
             <h3>Drag</h3>
-            <p>Hold an item and drag across buildings, starting over empty ground. Right mouse offers half instead.</p>
+            <p>Hold an item and start the drag away from buildings that can take items. Concrete, pipes, and solar panels are fine. Then sweep across buildings. Right mouse offers half instead.</p>
             <p class="keyline"><kbd>Ctrl</kbd> + <kbd>Left mouse</kbd></p>
           </div>
           <div class="card control">
@@ -333,7 +335,7 @@ footer h2 { color: #ffe1bb; font-size: 1.15rem; margin-bottom: 7px; }
         </div>
         <p class="action-copy muted">Both actions use your selected distribution mode. Items that cannot be placed stay at their source.</p>
         <div class="callout">In <strong>Even Distribute</strong>, Drag leaves a full building’s rejected share with you. Dump can redistribute rejected shares among eligible destinations. Drag can do the same when distributing spoilable items.</div>
-        <div class="callout"><strong>Balance Inventory</strong> can move matching items between buildings to even out their stock. When turrets or vehicles are destinations, their existing stock counts toward the balance and stays in place. Drag can swap loaded ammo for stronger ammo when upgrades are enabled.</div>
+        <div class="callout"><strong>Balance Inventory</strong> counts what is already in each building and aims for even final stock. It can also redistribute matching stock from ordinary machines and chests. Existing stock in turrets and vehicles stays in place during balancing.</div>
         <details class="demo" id="demo">
           <summary>Watch the original Drag demonstration</summary>
           <div class="detail-body">
@@ -347,22 +349,45 @@ footer h2 { color: #ffe1bb; font-size: 1.15rem; margin-bottom: 7px; }
 
       <section id="settings" aria-labelledby="settings-title">
         <h2 class="section-heading" id="settings-title">Settings</h2>
-        <p class="intro">Open the <strong>blue button beside your inventory</strong>, or use the shared mod button bar with <a href="https://mods.factorio.com/mod/GUI_Unifyer">GUI Unifyer</a>.</p>
+        <p class="intro">Blue button beside your inventory, or the <a href="https://mods.factorio.com/mod/GUI_Unifyer">GUI Unifyer</a> bar.</p>
         <div class="settings">
           <div class="card">
-            <h3>Distribution options</h3>
+            <h3>General</h3>
             <dl>
-              <div><dt>Sources</dt><dd>Cursor, inventory and vehicle cargo.</dd></div>
-              <div><dt>Fuel and ammo</dt><dd>Set per-building limits for Drag and Dump. Drag can upgrade ammo and swap wood for coal. In <strong>Advanced</strong>, choose which ammo tier and fuel value Dump offers first.</dd></div>
-              <div><dt>Destinations</dt><dd>Optional chest filling and machine output slots. Ordinary chests need the item already inside. Requester chests follow their requests.</dd></div>
-              <div><dt>Other controls</dt><dd>Range, delay and ignored buildings.</dd></div>
+              <div><dt>Distribution mode</dt><dd>Even Distribute or Balance Inventory.</dd></div>
+              <div><dt>Fuel and ammo limits</dt><dd>Per building. Enable separately for Drag and Dump.</dd></div>
             </dl>
           </div>
           <div class="card">
-            <h3>Personal logistic requests</h3>
-            <p>Your requests tell Dump how many items to keep. It keeps the requested maximum by default. You can switch to the minimum.</p>
-            <span class="example">Keep 100 → Dump everything above 100</span>
-            <p><strong>Minimum 0 + maximum ∞</strong> excludes the item from regular Dump. Compatible ammo and fuel slots can still be topped up.</p>
+            <h3>Drag</h3>
+            <dl>
+              <div><dt>Distribute items from</dt><dd>Cursor, inventory and vehicle cargo.</dd></div>
+              <div><dt>Ammo and fuel upgrades</dt><dd>Stronger ammo or coal in place of wood, at the same quality.</dd></div>
+            </dl>
+          </div>
+          <div class="card">
+            <h3>Dump</h3>
+            <dl>
+              <div><dt>Dump ammo</dt><dd>On by default.</dd></div>
+              <div><dt>Dump higher-quality items (Beta)</dt><dd>Off by default.</dd></div>
+              <div><dt>Destinations</dt><dd>Chests with matching stock, requester chests and optional machine outputs.</dd></div>
+            </dl>
+          </div>
+          <div class="card advanced" id="advanced">
+            <h3>Advanced</h3>
+            <dl>
+              <div><dt>Spoiled first / Fresh first</dt><dd>Freshness order for Drag and Dump.</dd></div>
+              <div><dt>Low tier ammo first / High tier ammo first</dt><dd>Dump order within each ammo family.</dd></div>
+              <div><dt>Low fuel value first / High fuel value first</dt><dd>Fuel order for Dump.</dd></div>
+              <div>
+                <dt>Respect requests / Ignore requests</dt>
+                <dd><strong>Respect</strong> (default) keeps up to your request maximum. Unrequested items follow Dump’s default filters.</dd>
+                <dd><strong>Ignore</strong> skips requests and default filters, and keeps the equipped ammo reserve.</dd>
+              </div>
+              <div><dt>Distribution delay</dt><dd>Wait before Drag applies. Default 0.9 s.</dd></div>
+              <div><dt>Inventory Cleanup range</dt><dd>Dump search radius. Default cap 30 tiles.</dd></div>
+              <div><dt>Ignored buildings</dt><dd>Building types skipped by Drag and Dump.</dd></div>
+            </dl>
           </div>
         </div>
       </section>
@@ -394,17 +419,16 @@ footer h2 { color: #ffe1bb; font-size: 1.15rem; margin-bottom: 7px; }
           <div>
             <h3>Ammo</h3>
             <p><strong>Dump ammo</strong> is enabled by default. In <strong>Advanced</strong>, choose <strong>Low tier ammo first</strong> (default) or <strong>High tier ammo first</strong>. This sets the Dump order within each ammo family, including magazines, cannon shells, and rockets. Within a magazine type, Dump uses partly spent magazines first.</p>
-            <p><strong>Keep at least 100 of your equipped ammo</strong> across your weapon slots, inventory and cursor. Drag and Dump can each move up to 100 matching magazines from your carried stock into compatible ammo slots, regardless of your personal requests.</p>
+            <p>Drag can move multiple stacks in one action with <strong>Inventory</strong> selected under <strong>Distribute items from</strong>. The ammo limit applies per destination. <strong>Dump → Ignore requests</strong> keeps 100 of each equipped ammo type and quality across weapon slots, inventory and cursor. <strong>Respect requests</strong> uses the personal request maximum instead.</p>
             <p><img class="inline-item" src="assets/32px-Atomic_bomb.png" alt=""> <strong>Atomic bombs</strong> can go to compatible turrets through Drag. Dump can send them to chests.</p>
             <section class="calculator scene" data-scene="ammo" aria-labelledby="ammo-example-title">
-              <div class="calc-top"><h4 id="ammo-example-title">Magazine progression</h4></div>
+              <div class="calc-top"><h4 id="ammo-example-title">Ammo and personal requests</h4></div>
               <div class="calc-body">
-                <p class="scene-setup">Eight empty gun turrets with <strong>Low tier ammo first</strong> selected. The ammo limit is <strong>0.1 stacks</strong> (10 magazines per turret).</p>
-                <div class="segment" role="group" aria-label="Ammo example steps">
+                <p class="scene-setup">You have <strong>1,000 piercing magazines total</strong>, with 980 in inventory and 20 equipped. Your request maximum is <strong>600</strong>. The 48 empty gun turrets have a limit of <strong>0.2 stacks</strong> (20 magazines each).</p>
+                <div class="segment" role="group" aria-label="Compare Dump request settings">
                   <button type="button" data-scene-step="0" aria-pressed="true">Start</button>
-                  <button type="button" data-scene-step="1" aria-pressed="false">First Dump</button>
-                  <button type="button" data-scene-step="2" aria-pressed="false">After firing</button>
-                  <button type="button" data-scene-step="3" aria-pressed="false">Second Dump</button>
+                  <button type="button" data-scene-step="1" aria-pressed="false">Respect requests</button>
+                  <button type="button" data-scene-step="2" aria-pressed="false">Ignore requests</button>
                 </div>
                 <div class="scene-state" data-scene-state></div>
                 <p class="calc-note" role="status" data-scene-note></p>
@@ -418,7 +442,7 @@ footer h2 { color: #ffe1bb; font-size: 1.15rem; margin-bottom: 7px; }
           <div>
             <h3>Fuel</h3>
             <p>Dump refills boilers and other compatible burners up to the configured fuel limit. In <strong>Advanced</strong>, choose <strong>Low fuel value first</strong> (default) or <strong>High fuel value first</strong>.</p>
-            <p>Fuel reserved by a personal logistic request can go directly into a compatible fuel slot.</p>
+            <p>With <strong>Respect requests</strong>, Dump keeps the fuel you’ve requested in personal logistics. Fuel in trash slots is available in either mode.</p>
           </div>
         </article>
 
@@ -434,7 +458,7 @@ footer h2 { color: #ffe1bb; font-size: 1.15rem; margin-bottom: 7px; }
           <img class="icon" src="assets/32px-Speed_module_3.png" alt="">
           <div>
             <h3>Dragging modules</h3>
-            <p>The module popup appears when any building in the Drag accepts the selected module as both a recipe ingredient and an installed module.</p>
+            <p>Drag opens the module popup when a building accepts the module in both its input slot and its module slot.</p>
             <figure class="module-popup">
               <figcaption>Where do you want the modules?</figcaption>
               <div class="module-options"><span>Input slot</span><span>Module slot</span><span class="cancel">Cancel</span></div>
@@ -475,8 +499,7 @@ footer h2 { color: #ffe1bb; font-size: 1.15rem; margin-bottom: 7px; }
           <details>
             <summary>Settings tweaks</summary>
             <div class="detail-body"><ul>
-              <li>Dump above the minimum personal logistic request and <strong>Drop items to machine outputs</strong> are off by default.</li>
-              <li>Added help icons for settings, including <strong>Ignored buildings</strong>.</li>
+              <li>Added more help icons.</li>
             </ul></div>
           </details>
           <details>
@@ -597,36 +620,30 @@ document.querySelectorAll("[data-example]").forEach(panel => {
 const itemImage = name => "assets/32px-" + name + ".png";
 const slot = (item, count, options = {}) => ({ item, count, ...options });
 
-const yellowMagazine = "Firearm_magazine";
 const redMagazine = "Piercing_rounds_magazine";
 const equippedMagazines = 20;
-const perTurretLimit = 10;
-const afterFiring = [0, 4, 0, 6, 5, 0, 8, 0];
-const yellowInventory = afterFiring.length * perTurretLimit;
-const redInventory = 120;
+const redInventory = 980;
+const turretCount = 48;
+const perTurretLimit = 20;
+const requestMaximum = 600;
+const ammoReserve = 100;
 const ammoNotes = [
-  "You carry both types of magazine. The turrets are empty.",
-  "All 80 yellow magazines move into the turrets. The red magazines stay with you.",
-  "Four turrets run out of ammo. The other four still hold yellow magazines.",
-  "40 red magazines fill the empty turrets. The other four keep firing yellow."
+  "Choose a request setting to see what one Dump would move from this starting stock.",
+  "Dump moves 380 magazines, 7 or 8 per turret. You keep 600 in inventory and 20 equipped.",
+  "Dump moves 900 magazines, 18 or 19 per turret. You keep 80 in inventory and 20 equipped. Your request stays at 600."
 ];
 
 function ammoScene(index) {
-  const yellowMoved = index > 0 ? yellowInventory : 0;
-  const redMoved = index === 3 ? afterFiring.filter(count => count === 0).length * perTurretLimit : 0;
+  const surplus = redInventory + equippedMagazines - ammoReserve;
+  const offers = [0, redInventory - requestMaximum, surplus];
+  const redMoved = Math.min(offers[index], turretCount * perTurretLimit);
   const redLeft = redInventory - redMoved;
-  const turretSlots = afterFiring.map(left => {
-    if (index === 0) return slot(yellowMagazine, 0);
-    if (index === 1) return slot(yellowMagazine, perTurretLimit);
-    if (index === 3 && left === 0) return slot(redMagazine, perTurretLimit);
-    return slot(yellowMagazine, left);
-  });
-  const loaded = turretSlots.filter(entry => entry.count).length;
+  const perTurret = Math.floor(redMoved / turretCount);
+  const remainder = redMoved % turretCount;
+  const turretSlots = Array.from({length: turretCount}, (_, i) => slot(redMagazine, perTurret + (i < remainder ? 1 : 0)));
+  const loaded = turretSlots.filter(entry => entry.count > 0).length;
   return {
     player: [
-      { name: "Firearm magazines", icon: yellowMagazine, layout: "single",
-        slots: [slot(yellowMagazine, yellowInventory - yellowMoved,
-          { label: "Inventory", delta: index === 1 ? -yellowMoved : 0 })] },
       { name: "Piercing magazines", icon: redMagazine,
         reserve: equippedMagazines + " + " + redLeft + " = " + (equippedMagazines + redLeft),
         slots: [
@@ -634,8 +651,8 @@ function ammoScene(index) {
           slot(redMagazine, redLeft, { label: "Inventory", delta: -redMoved })
         ] }
     ],
-    turrets: [{ name: "Gun turrets", icon: "Gun_turret", total: loaded + " / 8 loaded",
-      rows: [turretSlots.slice(0, 4), turretSlots.slice(4)] }]
+    turrets: [{ name: "Gun turrets", icon: "Gun_turret", total: loaded + " / " + turretCount + " loaded",
+      rows: [turretSlots] }]
   };
 }
 

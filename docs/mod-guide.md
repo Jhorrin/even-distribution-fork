@@ -11,12 +11,12 @@ Even Distribution Fork for Factorio 2.1. Fill several buildings at once or move 
 
 | Action | Controls |
 | --- | --- |
-| **Drag** | Hold an item, start over empty ground, and sweep across the buildings with **Ctrl + Left mouse**. **Ctrl + Right mouse** offers half. |
+| **Drag** | Hold an item and start the drag away from buildings that can take items. Concrete, pipes, and solar panels are fine. Sweep across buildings with **Ctrl + Left mouse**. **Ctrl + Right mouse** offers half. |
 | **Dump** | Press **Shift + C** to move excess items to compatible buildings nearby. |
 
 Both actions use the distribution mode you selected. In **Even Distribute**, a full building's rejected Drag share stays with you. Dump can try the remaining eligible destinations. Items that cannot be placed stay at their source.
 
-**Balance Inventory** can move matching items between buildings to even out their stock. When turrets or vehicles are destinations, their existing stock counts toward the balance and stays in place. Drag can swap loaded ammo for stronger ammo when upgrades are enabled.
+**Balance Inventory** counts what is already in each building and aims for even final stock. It can also redistribute matching stock from ordinary machines and chests. Existing stock in turrets and vehicles stays in place during balancing.
 
 <details>
 <summary>Distribution example</summary>
@@ -39,14 +39,35 @@ Offer **60 items** to three buildings that already contain **30 / 0 / 0**.
 
 ## Settings
 
-Open the **blue button beside your inventory**. With GUI Unifyer installed, the shared mod button opens the settings fully expanded.
+Blue button beside your inventory, or the GUI Unifyer bar.
 
-- Choose Drag sources from the cursor, inventory, and vehicle cargo.
-- Set separate fuel and ammo limits for Drag and Dump. Drag can upgrade ammo and swap wood for coal.
-- Configure range, delay, and ignored buildings. Hover over **ⓘ** for setting details.
-- Enable chest filling or machine output filling as needed. Ordinary chests need the item already inside. Requester chests follow their requests.
+### General
 
-**Personal logistic requests** tell regular Dump how much to keep. It uses the requested maximum by default. Enable minimum-request cleanup to use the minimum instead. A minimum of 0 and an unlimited maximum exclude the item from regular Dump. **2.2.0** can still top up compatible ammo and fuel slots from requested stock.
+- **Distribution mode** offers Even Distribute or Balance Inventory.
+- **Fuel and ammo limits** apply per building. Enable separately for Drag and Dump.
+
+### Drag
+
+- **Distribute items from** selects cursor, inventory and vehicle cargo.
+- **Ammo and fuel upgrades** allow stronger ammo or coal in place of wood, at the same quality.
+
+### Dump
+
+- **Dump ammo** is on by default.
+- **Dump higher-quality items (Beta)** is off by default.
+- **Destinations** include chests with matching stock, requester chests and optional machine outputs.
+
+### Advanced
+
+| Setting | What it does |
+| --- | --- |
+| **Spoiled first / Fresh first** | Freshness order for Drag and Dump. |
+| **Low tier ammo first / High tier ammo first** | Dump order within each ammo family. |
+| **Low fuel value first / High fuel value first** | Fuel order for Dump. |
+| **Respect requests / Ignore requests** | Respect (default) keeps up to your request maximum and uses default filters for unrequested items. Ignore skips both and keeps the equipped ammo reserve. |
+| **Distribution delay** | Wait before Drag applies. Default 0.9 s. |
+| **Inventory Cleanup range** | Dump search radius. Default cap 30 tiles. |
+| **Ignored buildings** | Building types skipped by Drag and Dump. |
 
 ## Changes since the original
 
@@ -61,31 +82,31 @@ Spoilable items are distributed in three groups, from mostly spoiled through med
 
 ### <img width="28" alt="" src="https://wiki.factorio.com/images/thumb/Firearm_magazine.png/32px-Firearm_magazine.png"> Ammo
 
-Dump offers partly spent magazines first within each type. Drag and Dump protect a reserve of **100** for each equipped ammo item and quality, counting weapon slots, inventory, and cursor.
+Dump offers partly spent magazines first within each type. **Dump → Ignore requests** keeps a reserve of **100** for each equipped ammo type and quality across weapon slots, inventory and cursor. **Respect requests** uses the personal request maximum instead.
 
-**2.2.0** adds a **Dump ammo** checkbox, enabled by default. Under **Advanced**, choose **Low tier ammo first** (default) or **High tier ammo first**. The order applies within each ammo family, including magazines, cannon shells, and rockets. Dump can refill compatible ammo slots from personally requested stock. Each action moves up to 100 of the matching equipped ammo from carried stock, subject to the reserve.
+**Dump ammo** is on by default. The ammo order under **Advanced** applies within each ammo family, including magazines, cannon shells, and rockets.
+
+Drag can move multiple stacks in one action with **Inventory** selected under **Distribute items from**. The ammo limit applies per destination.
 
 **Atomic bombs** can go to compatible turrets through Drag. Dump can send them to eligible chests.
 
 <details>
-<summary>Magazine progression · 2.2.0</summary>
+<summary>Ammo and personal requests</summary>
 
-Eight empty gun turrets with **Low tier ammo first** and a **0.1-stack** limit. The player starts with 80 yellow magazines and 120 red magazines in inventory, plus 20 red magazines equipped.
+You have **1,000 piercing magazines total**, with 980 in inventory and 20 equipped. Your request maximum is **600**. The 48 empty gun turrets have a limit of **0.2 stacks** (20 magazines each).
 
-| Step | Turrets | Yellow in inventory | Red in inventory | Red equipped |
-| --- | --- | ---: | ---: | ---: |
-| Start | 8 empty | 80 | 120 | 20 |
-| First Dump | 8 loaded with 10 yellow each | 0 | 120 | 20 |
-| After firing | 4 empty, 4 still holding yellow | 0 | 120 | 20 |
-| Second Dump | 4 loaded with 10 red each, 4 still holding yellow | 0 | 80 | 20 |
+| After one Dump | To turrets | Left in inventory | Equipped |
+| --- | ---: | ---: | ---: |
+| **Respect requests** | 380 (7 or 8 each) | 600 | 20 |
+| **Ignore requests** | 900 (18 or 19 each) | 80 | 20 |
 
-You finish with **100 red magazines** across inventory and equipped slots.
+**Ignore requests** leaves 100 magazines across inventory and weapon slots. Your request stays at 600.
 
 </details>
 
 ### <img width="28" alt="" src="https://wiki.factorio.com/images/thumb/Rocket_fuel.png/32px-Rocket_fuel.png"> Fuel
 
-Dump refills boilers and other compatible burners, subject to the configured fuel limit. **2.2.0** adds **Low fuel value first** (default) and **High fuel value first** under **Advanced**. Fuel reserved by a personal logistic request can go directly into a compatible fuel slot.
+Dump refills boilers and other compatible burners, subject to the configured fuel limit. **2.2.0** adds **Low fuel value first** (default) and **High fuel value first** under **Advanced**. With **Respect requests**, Dump keeps the fuel you’ve requested in personal logistics. Fuel in trash slots is available in either mode.
 
 ### Quality
 
@@ -93,7 +114,7 @@ Drag supports all qualities. Dump handles Normal quality by default. **2.2.0** a
 
 ### <img width="28" alt="" src="https://wiki.factorio.com/images/thumb/Speed_module_3.png/32px-Speed_module_3.png"> Dragging modules
 
-When a building in the Drag accepts the selected module as both a recipe ingredient and an installed module, the popup asks **Where do you want the modules?** Choose **Input slot**, **Module slot**, or **Cancel**.
+Drag opens the module popup when a building accepts the module in both its input slot and its module slot. Choose **Input slot**, **Module slot**, or **Cancel**.
 
 ### Dragging placeable items
 
@@ -111,7 +132,7 @@ Drag can distribute placeable items such as transport belts to machines that use
 <details>
 <summary>Settings and compatibility</summary>
 
-- **Dump above the minimum personal logistic request** and **Drop items to machine outputs** are off by default.
+- Added more help icons.
 - **Space Age** and **GUI Unifyer** are recommended dependencies. Other Even Distribution variants are incompatible.
 - Fixed Modlist UI requests for outdated thumbnail dimensions.
 - Inherited Dump defaults take effect when matching items or groups exist. The original defaults include Bob’s Mods, Angel’s Mods, Pyanodons, Space Exploration, Industrial Revolution, DyTech, and ScienceCostTweaker. Current overhaul versions have not been retested. The original mod marked DyTech and Pyanodons as untested.

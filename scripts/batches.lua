@@ -262,10 +262,10 @@ function this.snapshot(entity, cursor, item, quality, player, previous)
     entity, cursor = plain(entity), plain(cursor)
     local result = {inventories = {}, item = item, quality = quality, cursor = cursor}
     local sources, seen = {cursor}, {}
-    local function capture(inv, playerInventory)
+    local function capture(inv, playerInventory, turretAmmo)
         if not (inv and inv.valid) or seen[inv] then return end
         seen[inv] = true
-        local record = {inventory = inv, slots = {}, playerInventory = playerInventory}
+        local record = {inventory = inv, slots = {}, playerInventory = playerInventory, turretAmmo = turretAmmo}
         result.inventories[#result.inventories + 1] = record
         if inv.get_item_count{name = item, quality = quality} == 0 then return end
         for i = 1, #inv do
@@ -276,7 +276,9 @@ function this.snapshot(entity, cursor, item, quality, player, previous)
             end
         end
     end
-    for i = 1, entity.get_max_inventory_index() do capture(entity.get_inventory(i)) end
+    local turretAmmoIndex = (entity.type == "ammo-turret" and defines.inventory.turret_ammo)
+        or (entity.type == "artillery-turret" and defines.inventory.artillery_turret_ammo)
+    for i = 1, entity.get_max_inventory_index() do capture(entity.get_inventory(i), nil, i == turretAmmoIndex) end
     -- Native cursor refill can debit another main-inventory stack before the
     -- fast-transfer event. Restoring only the cursor would delete that refill.
     player = plain(player)
@@ -365,13 +367,15 @@ function this.undo(snapshot)
             retained[chosen] = true
             restores[#restores + 1] = {slot = chosen, index = entry.index}
         end
-        plans[#plans + 1] = {inventory = inv, restores = restores, retained = retained, playerInventory = record.playerInventory}
+        plans[#plans + 1] = {inventory = inv, restores = restores, retained = retained,
+            playerInventory = record.playerInventory, turretAmmo = record.turretAmmo}
     end
     -- A different mod or a changed transfer may have altered the stock. Never
     -- overwrite that live state with an older count. Native ammo/tool merging
     -- is allowed: compare remaining shots/uses rather than raw stack counts.
     if math.abs(before - current) > 0.00001 then this.discard(snapshot); return end
     if not snapshot.cursor.can_set_stack(snapshot.backup[1]) then this.discard(snapshot); return end
+    local removedAmmo
     for _, plan in ipairs(plans) do
         local inv = plan.inventory
         if not plan.playerInventory then
@@ -379,7 +383,18 @@ function this.undo(snapshot)
         end
         for i = 1, #inv do
             if (plan.playerInventory or not plan.retained[i]) and matches(inv[i], snapshot.item, snapshot.quality) then
-                inv[i].clear()
+                if plan.turretAmmo then
+                    -- Moving the provisional stack uses the same inventory
+                    -- behavior as manual removal. Clearing it raises an alert.
+                    removedAmmo = removedAmmo or game.create_inventory(1)
+                    if removedAmmo[1].transfer_stack(inv[i]) then
+                        removedAmmo[1].clear()
+                    else
+                        inv[i].clear()
+                    end
+                else
+                    inv[i].clear()
+                end
             end
         end
         if plan.playerInventory then
@@ -387,6 +402,7 @@ function this.undo(snapshot)
         end
     end
     snapshot.cursor.set_stack(snapshot.backup[1])
+    if removedAmmo then removedAmmo.destroy() end
     this.discard(snapshot)
 end
 

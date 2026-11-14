@@ -29,42 +29,16 @@ local function blockedCleanupTarget(entity, item, prechecked)
     return entity.type == "reactor" or entity.type == "fusion-reactor"
 end
 
-local function refillTargets(entities, item, quality, port)
-    local targets = metatables.new("entityAsIndex")
-    local prototype = prototypes.item[item]
-    for _index, entity in ipairs(entities) do
-        entity = _(entity)
-        if not blockedCleanupTarget(entity, item) then
-            local inventory = entity:inventory(port)
-            if inventory and inventory.can_insert({name = item, quality = quality, count = 1}) then
-                local compatible
-                if port == "fuel" then
-                    compatible = fuel.accepts(entity.burner, prototype)
-                else
-                    compatible = entity.type == "car" or entity.type == "spider-vehicle" or entity:supportsAmmo(prototype)
-                end
-                if compatible then targets[entity] = entity end
-            end
-        end
-    end
-    return targets
-end
-
 local function orderedOffers(offers, strongestAmmoFirst, highestFuelFirst)
     local result = {}
     for qualityIndex, offer in ipairs(offers) do
-        local function add(item, maximum)
+        for item, maximum in pairs(offer.items) do
             local prototype = prototypes.item[item]
             local group = prototype.type == "ammo" and 1 or (fuel.is_fuel(prototype) and 2 or 3)
             result[#result + 1] = {
                 item = item, maximum = maximum, quality = offer.quality,
                 qualityIndex = qualityIndex, group = group, prototype = prototype,
-                refillPort = offer.refillPorts and offer.refillPorts[item],
             }
-        end
-        for item, maximum in pairs(offer.items) do add(item, maximum) end
-        for item in pairs(offer.refillPorts or {}) do
-            if not offer.items[item] then add(item, 0) end
         end
     end
     table.sort(result, function(a, b)
@@ -82,10 +56,11 @@ end
 
 local function dumpBatches(player, entities, offers, dropToChests, dropToOutput, balance)
     local freshFirst = player:setting("disableSpoiledFirst") == true
+    local keepEquippedAmmoReserve = player:setting("cleanupIgnoreLogisticRequests") == true
     local order = orderedOffers(offers, player:setting("cleanupStrongAmmoFirst"), player:setting("cleanupHighFuelFirst"))
     local offY, marked = 0, metatables.new("entityAsIndex")
     for _index, offer in ipairs(order) do
-        local item, quality, refillPort = offer.item, offer.quality, offer.refillPort
+        local item, quality = offer.item, offer.quality
         local function feedback(entity, inserted)
             if inserted ~= 0 then
                 entity:spawnDistributionText(player, item, inserted, offY)
@@ -96,35 +71,13 @@ local function dumpBatches(player, entities, offers, dropToChests, dropToOutput,
             -- Eligibility was checked before balancing could debit seed items.
             return this.insert(player, entity, item, amount, port, true, quality)
         end
-        local personalAmmoMaximum
-        local startingPersonalStock
-        if refillPort == "ammo" and offer.maximum > 0 then
-            personalAmmoMaximum = ammoPolicy.personalAllowance(player, item, quality)
-            if personalAmmoMaximum < math.huge then
-                startingPersonalStock = player:playeritemcount(item, true, false, quality)
-            end
-        end
         if offer.maximum > 0 then
             local targets = this.filterEntities(entities, item, dropToChests, dropToOutput, balance, quality)
             distribution.apply(player, targets, item, quality, {
                 inventory = true, trash = true, balance = balance, maximum = offer.maximum,
                 targetPort = cleanupPort, profile = "cleanup", quality = quality, freshFirst = freshFirst,
+                keepEquippedAmmoReserve = keepEquippedAmmoReserve,
             }, insert, feedback)
-        end
-        if refillPort then
-            if startingPersonalStock then
-                local used = math.max(0, startingPersonalStock - player:playeritemcount(item, true, false, quality))
-                personalAmmoMaximum = math.max(0, personalAmmoMaximum - used)
-            end
-            local targets = refillTargets(entities, item, quality, refillPort)
-            if not _(targets):is("empty") then
-                -- Only compatible ammo or fuel slots can use requested stock.
-                distribution.apply(player, targets, item, quality, {
-                    inventory = true, balance = balance, targetPort = function() return refillPort end,
-                    profile = "cleanup", quality = quality, personalAmmoMaximum = personalAmmoMaximum,
-                    freshFirst = freshFirst,
-                }, insert, feedback)
-            end
         end
         offY = offY - 0.5
     end

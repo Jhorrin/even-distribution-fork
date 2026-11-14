@@ -101,8 +101,8 @@ function this.plan(player, entities, item, quality, options)
     local batch = batches.select(sources, item, quality, playerBatch.count > 0 and playerBatch.bracket or nil,
         includeAll, options.freshFirst)
     local playerCount, rawPlayerCount = 0, 0
-    local personal = ammunition and ammoPolicy.personalAllowance(player, item, quality) or math.huge
-    personal = math.min(personal, options.personalAmmoMaximum or math.huge)
+    local personal = ammunition and options.keepEquippedAmmoReserve
+        and ammoPolicy.personalAllowance(player, item, quality) or math.huge
     for _, entry in ipairs(batch.entries) do
         if entry.owner == plain(player) then
             rawPlayerCount = rawPlayerCount + entry.limit

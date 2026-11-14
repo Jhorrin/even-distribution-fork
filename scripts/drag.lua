@@ -131,15 +131,32 @@ local function distribute(player, cache, balance, choice)
     end)
 end
 
+local function canStartDrag(selected)
+    if not (selected and selected.valid) then return true end
+    local entity = _(selected)
+    return not (entity:is("crafting machine") or entity:inventory("main") or entity:inventory("input")
+        or entity:inventory("fuel") or entity:inventory("ammo") or entity:inventory("modules")
+        or entity.type == "roboport")
+end
+
 local function startTransfer(event, half)
     local index = event.player_index
     local player = _(game.players[index]); if player:isnot("valid player") then return end
     local cache = _(storage.cache[index])
+    cache.dragStart = nil
+    if event.in_gui or not player:setting("enableDragDistribute") then return end
+
+    this.finishPending(player, cache)
+    -- Discard any snapshot from before this press, even in the same tick.
+    this.unscheduleSnapshot(cache)
+    batches.discard(cache.selectedEvent and cache.selectedEvent.snapshot)
+    cache.selectedEvent = nil
+
     local stack = player.cursor_stack
-    if stack and stack.valid_for_read and choiceKind(stack.name) and player:setting("enableDragDistribute") then
-        this.finishPending(player, cache)
-        this.on_selected_entity_changed(event)
-    end
+    if not stack or not stack.valid_for_read then return end
+    if not canStartDrag(player.selected) then return end
+
+    cache.dragStart = {item = stack.name, quality = stack.quality.name}
     cache.half = half
 end
 
@@ -155,21 +172,27 @@ function this.on_selected_entity_changed(event)
     local index = event.player_index
     local player = _(game.players[index]); if player:isnot("valid player") or not player:setting("enableDragDistribute") then return end
     local cache = _(storage.cache[index])
+    local start = cache.dragStart
     local previous = cache.selectedEvent
     this.unscheduleSnapshot(cache)
     cache.selectedEvent = nil
     local cursor_stack = _(player.cursor_stack)
     local selected = _(player.selected)
-    if cursor_stack:isnot("valid stack") or selected:isnot("valid") or selected:isIgnored(player) then
+    if not start or cursor_stack:isnot("valid stack") or selected:isnot("valid") or selected:isIgnored(player) then
         batches.discard(previous and previous.snapshot)
         return
     end
     local item, quality = cursor_stack.name, cursor_stack.quality.name
+    if item ~= start.item or quality ~= start.quality then
+        batches.discard(previous and previous.snapshot)
+        return
+    end
     if cache.item and (cache.item ~= item or (cache.quality or "normal") ~= quality) then
         this.finishPending(player, cache)
     end
     cache.selectedEvent = {
         tick = event.tick,
+        entity = selected:toPlain(),
         item = item,
         quality = quality,
         itemCount = selected:itemcount(item, nil, nil, quality),
@@ -200,7 +223,8 @@ function this.on_player_fast_transferred(event)
 	local cache    = _(storage.cache[index])
 	local selected = _(player.selected)    ; if selected:isnot("valid") or selected:isIgnored(player) then return end
 
-	if cache.selectedEvent and cache.selectedEvent.tick == event.tick and event.entity == selected:toPlain() then
+	if cache.dragStart and cache.selectedEvent and cache.selectedEvent.tick == event.tick
+	    and cache.selectedEvent.entity == event.entity and event.entity == selected:toPlain() then
 
 		if event.from_player then
 			-- distribute...
@@ -210,7 +234,7 @@ function this.on_player_fast_transferred(event)
                 if cache.item and (cache.item ~= selectedEvent.item or (cache.quality or "normal") ~= (selectedEvent.quality or "normal")) then
                     this.finishPending(player, cache)
                 end
-                if choiceKind(selectedEvent.item) and event.is_split ~= nil then
+                if event.is_split ~= nil then
                     cache.half = event.is_split
                 end
                 cache:set{
@@ -355,6 +379,7 @@ end
 function this.resetCache(cache)
     this.unscheduleSnapshot(cache)
     batches.discard(cache.selectedEvent and cache.selectedEvent.snapshot)
+	cache.dragStart = nil
 	cache.item = nil
 	cache.quality = nil
 	cache.selectedEvent = nil
@@ -435,7 +460,10 @@ this.on_player_left_game = this.on_player_died
 
 function this.on_configuration_changed()
     for index, cache in pairs(storage.cache or {}) do
-        if cache.moduleDrag or cache.awaitingModuleChoice or (cache.item and choiceKind(cache.item)) then
+        local pending = cache.dragStart or cache.moduleDragFromEmptyGround or cache.moduleDrag
+            or cache.awaitingModuleChoice or (cache.item and choiceKind(cache.item))
+        if pending then
+            cache.moduleDragFromEmptyGround = nil
             if cache.awaitingModuleChoice then cache.awaitingSlotChoice = true end
             cache.awaitingModuleChoice = nil
             cache.ambiguousModuleTargets = nil

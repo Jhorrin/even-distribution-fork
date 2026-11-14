@@ -27,6 +27,12 @@ function entity:supportsAmmo(item)
 	return false
 end
 
+function entity:clearTurretAmmoAlert()
+    if self.type == "ammo-turret" or self.type == "artillery-turret" then
+        self.force.remove_alert{entity = self:toPlain(), type = defines.alert_type.turret_out_of_ammo}
+    end
+end
+
 -- for furnace
 function entity:canSmelt(item)
 	return #prototypes.get_recipe_filtered({

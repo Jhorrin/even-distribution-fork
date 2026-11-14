@@ -255,6 +255,7 @@ function control:customInsert(player, item, amount, takenFromCar, takenFromTrash
                 end
             end
 
+            if insertedHere > 0 then self:clearTurretAmmoAlert() end
             inserted = inserted + insertedHere
             amount = amount - insertedHere
         end

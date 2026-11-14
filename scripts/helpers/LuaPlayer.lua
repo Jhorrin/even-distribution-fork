@@ -1,5 +1,4 @@
 local transfers = require("scripts.transfers")
-local fuel = require("scripts.fuel")
 local config = require("config")
 local player = scripts.helpers
 local _ = scripts.helpers.on
@@ -33,8 +32,7 @@ function player:droprange()
 	return math.min(self.reach_distance * config.rangeMultiplier, self:setting("cleanupDropRange"))
 end
 
-local function collectDumpOffers(contents, trash, requests, anyQualityRequests, defaultTrash, useMinimum, dumpAmmo)
-    local refillPorts = {}
+local function collectDumpOffers(contents, trash, requests, anyQualityRequests, defaultTrash, dumpAmmo, ignoreLogisticRequests)
     if not dumpAmmo then
         for item in pairs(trash) do
             if prototypes.item[item].type == "ammo" then trash[item] = nil end
@@ -44,22 +42,15 @@ local function collectDumpOffers(contents, trash, requests, anyQualityRequests, 
         local prototype = prototypes.item[item]
         local isAmmo = prototype.type == "ammo"
         if dumpAmmo or not isAmmo then
-            local targetAmount = count
-            local slot = requests[item] or anyQualityRequests[item]
-            if not slot then
-                -- Bioflux can be a recipe ingredient even though it is
-                -- categorized as food for captive spawners.
-                targetAmount = item == "bioflux" and 0 or defaultTrash[item]
-            elseif useMinimum and slot.count > 0 then
-                targetAmount = slot.count
-            elseif slot.max_count ~= nil then
-                targetAmount = slot.max_count
-            end
-            if targetAmount == nil or targetAmount > 0 then
-                if isAmmo and slot and item ~= "atomic-bomb" then
-                    refillPorts[item] = "ammo"
-                elseif not isAmmo and fuel.is_fuel(prototype) then
-                    refillPorts[item] = "fuel"
+            local targetAmount = 0
+            if not ignoreLogisticRequests then
+                local slot = requests[item] or anyQualityRequests[item]
+                if slot then
+                    targetAmount = slot.max_count or count
+                else
+                    -- Bioflux can be a recipe ingredient even though it is
+                    -- categorized as food for captive spawners.
+                    targetAmount = item == "bioflux" and 0 or defaultTrash[item]
                 end
             end
             if targetAmount ~= nil and count > targetAmount then
@@ -67,16 +58,19 @@ local function collectDumpOffers(contents, trash, requests, anyQualityRequests, 
             end
         end
     end
-    return trash, refillPorts
+    return trash
 end
 
 function player:dumpOffers()
     local byQuality = self:setting("cleanupHigherQuality") == true
-    local useMinimum = self:setting("cleanupRequestOverflow")
     local dumpAmmo = self:setting("cleanupDumpAmmo") ~= false
+    local ignoreLogisticRequests = self:setting("cleanupIgnoreLogisticRequests") == true
     local contents = self:contents(nil, byQuality)
     local trash = self:contents("character_trash", byQuality)
-    local requests = self:has("valid", "character") and _(self.character):logisticSlots(byQuality) or {}
+    local requests = {}
+    if not ignoreLogisticRequests and self:has("valid", "character") then
+        requests = _(self.character):logisticSlots(byQuality)
+    end
     if not byQuality then
         contents, trash, requests = {normal = contents}, {normal = trash}, {normal = requests}
     end
@@ -87,10 +81,10 @@ function player:dumpOffers()
         trash[quality] = trash[quality] or {}
     end
     for quality, trashItems in pairs(trash) do
-        local items, refillPorts = collectDumpOffers(contents[quality] or {}, trashItems, requests[quality] or {},
-            anyQualityRequests, storage.defaultTrash, useMinimum, dumpAmmo)
-        if next(items) or next(refillPorts) then
-            offers[#offers + 1] = {quality = quality, items = items, refillPorts = refillPorts}
+        local items = collectDumpOffers(contents[quality] or {}, trashItems, requests[quality] or {},
+            anyQualityRequests, storage.defaultTrash, dumpAmmo, ignoreLogisticRequests)
+        if next(items) then
+            offers[#offers + 1] = {quality = quality, items = items}
         end
     end
     if #offers > 1 then

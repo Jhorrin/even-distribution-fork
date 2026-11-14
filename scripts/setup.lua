@@ -168,9 +168,9 @@ function setup.migrateSettings(player)
 	if settings.distributionDelay == nil            then settings.distributionDelay = 0.9 end
 
 	if settings.enableInventoryCleanupHotkey == nil then settings.enableInventoryCleanupHotkey = true end
-	if settings.cleanupRequestOverflow == nil       then settings.cleanupRequestOverflow = false end
 	if settings.cleanupHigherQuality == nil         then settings.cleanupHigherQuality = false end
 	if settings.cleanupDumpAmmo == nil              then settings.cleanupDumpAmmo = true end
+	if settings.cleanupIgnoreLogisticRequests == nil then settings.cleanupIgnoreLogisticRequests = false end
 	if settings.dropTrashToChests == nil       		then settings.dropTrashToChests = true end
 	if settings.dropTrashToOutput == nil       		then settings.dropTrashToOutput = false end
 	if settings.cleanupUseFuelLimit == nil       	then settings.cleanupUseFuelLimit = true end
@@ -184,7 +184,6 @@ function setup.migrateSettings(player)
 		settings.version                = "1.0.0"
 		settings.enableDragDistribute   = player.mod_settings["enable-ed"].value
 		settings.takeFromCar            = player.mod_settings["take-from-car"].value
-		settings.cleanupRequestOverflow = player.mod_settings["cleanup-logistic-request-overflow"].value
 		settings.dropTrashToChests      = player.mod_settings["drop-trash-to-chests"].value
 		settings.distributionDelay      = player.mod_settings["distribution-delay"].value
 		settings.cleanupDropRange       = player.mod_settings["max-inventory-cleanup-drop-range"].value

@@ -690,21 +690,6 @@ this.templates.settingsWindow = {
 								},
 								{
 									type = "checkbox",
-									name = "checkbox_request_overflow",
-									caption = {"", {"settings-gui.cleanup-request-overflow"}, " [img=info]"},
-									tooltip = {"settings-gui.cleanup-request-overflow-description"},
-									state = false,
-									onCreated = function(self)
-										local player = _(self.gui.player)
-										self.state = player:setting("cleanupRequestOverflow")
-									end,
-									onChanged = function(self, event)
-										local player = _(self.gui.player)
-										player:changeSetting("cleanupRequestOverflow", self.state)
-									end,
-								},
-								{
-									type = "checkbox",
 									name = "cleanup_fuel_limit",
 									caption = {"settings-gui.use-fuel-limit"},
 									state = true,
@@ -855,6 +840,9 @@ this.templates.settingsWindow = {
 									"Sets the Dump order for magazines, cannon shells, and rockets."),
 								orderSwitch("fuel_order", "cleanupHighFuelFirst", "Low fuel value first", "High fuel value first",
 									"Choose the order Dump offers fuel to compatible burners."),
+								orderSwitch("dump_logistic_requests", "cleanupIgnoreLogisticRequests",
+									{"settings-gui.dump-respect-requests"}, {"settings-gui.dump-ignore-requests"},
+									{"settings-gui.dump-requests-description"}),
 								{
 									type = "flow",
 									direction = "horizontal",

@@ -1,4 +1,21 @@
 ---------------------------------------------------------------------------------------------------
+Version: 2.2.4
+Date: 2026-11-14
+  Changes:
+    - Keep the equipped ammo reserve only when using Dump with Ignore requests.
+    - Drag can use the matching ammo available from its selected sources, up to the configured limit per destination.
+---------------------------------------------------------------------------------------------------
+Version: 2.2.3
+Date: 2026-11-13
+  Changes:
+    - Choose whether Dump respects personal logistic requests for all items in Advanced. Ignoring requests still keeps the equipped ammo reserve.
+    - Drag and Dump can distribute the available ammo above the equipped reserve in one action. Configured ammo limits per destination still apply.
+  Bugfixes:
+    - Start distribution only when Ctrl+drag begins away from entities that can take items. Concrete, pipes, and solar panels are valid starting points.
+    - Clear a turret's out-of-ammo alert after successfully adding ammo to it.
+    - Avoid triggering an out-of-ammo alert while collecting turret targets during Ctrl+drag.
+    - Respect personal logistic requests when distributing fuel with Shift+C.
+---------------------------------------------------------------------------------------------------
 Version: 2.2.2
 Date: 2026-11-13
   Changes:

@@ -4,6 +4,6 @@ A fork of [Even Distribution by 321freddy](https://github.com/321freddy/even-dis
 
 [**Mod guide**](https://jhorrin.github.io/even-distribution-fork/)
 
-This repository contains the Even Distribution Fork 2.2.2 source. See [changelog.txt](changelog.txt) for changes and the [Factorio Mod Portal](https://mods.factorio.com/mod/even-distribution-fork) for published releases.
+This repository contains the Even Distribution Fork 2.2.4 source. See [changelog.txt](changelog.txt) for changes and the [Factorio Mod Portal](https://mods.factorio.com/mod/even-distribution-fork) for published releases.
 
 The original mod is listed under the GNU Lesser General Public License v3.0 on the [Factorio Mod Portal](https://mods.factorio.com/mod/even-distribution). See [COPYING.LESSER](COPYING.LESSER) and [COPYING](COPYING) for the license texts.
